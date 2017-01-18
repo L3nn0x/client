@@ -85,20 +85,8 @@ class Application:
         self.win.destroy()
 
     def click(self, link):
-        self.window = tk.Toplevel(self.win)
-        self.window.maxsize(width=300, height=300)
-        self.cv = tk.Canvas(self.window)
-        self.window.bind('<Button-1>', lambda e: self.window.destroy())
-        self.cv.pack(side='top', fill='both', expand='yes')
-        self.window.lift()
-        try:
-            r = requests.get(link)
-            if r.status_code != 200:
-                print(r.status_code)
-            self.image = ImageTk.PhotoImage(Image.open(BytesIO(r.content)))
-            self.cv.create_image(10, 10, image=self.image)
-        except Exception as e:
-            print(e)
+        import webbrowser
+        webbrowser.open(link, new=2)
 
     def insertMsg(self, msg):
         tags = []
