@@ -1,3 +1,5 @@
+#!/bin/python3
+
 from api import Chat
 from app import Application
 import sys

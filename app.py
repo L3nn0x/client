@@ -4,9 +4,11 @@ from io import BytesIO
 from PIL import Image, ImageTk
 from hyperlink import HyperlinkManager
 import requests
+import time
 
 class Application:
     def __init__(self, chat):
+        self.lastActive = 0
         self.chat = chat
         self.win = tk.Tk()
         self.win.title("chat")
@@ -59,6 +61,14 @@ class Application:
             self.chat.send(data)
 
     def update(self):
+        if self.win.focus_get() == None:
+            if not self.lastActive:
+                self.lastActive = time.time()
+            elif time.time() - self.lastActive > 10:
+                self.chat.isActive(False, self.lastActive)
+        else:
+            self.chat.isActive(True)
+            self.lastActive = 0
         self.chat.update()
         if self.chat.diff == 0:
             self.win.after(1000, self.update)
@@ -80,6 +90,7 @@ class Application:
         self.cv = tk.Canvas(self.window)
         self.window.bind('<Button-1>', lambda e: self.window.destroy())
         self.cv.pack(side='top', fill='both', expand='yes')
+        self.window.lift()
         try:
             r = requests.get(link)
             if r.status_code != 200:

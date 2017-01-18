@@ -28,6 +28,8 @@ class User:
 
 class Chat:
     def __init__(self, username, color="000000"):
+        self.active = False
+        self.inactiveTime = 0
         self.username = username
         self.color = color
         self.beat = 0
@@ -37,8 +39,23 @@ class Chat:
         self.history = []
         self.connected = {}
 
+    def isActive(self, active=None, inactiveTime=None):
+        if active == None:
+            return self.active
+        if active:
+            self.active = True
+            self.inactiveTime = 0
+        else:
+            self.active = False
+            if inactiveTime == None:
+                self.inactiveTime = int(time.time())
+            else:
+                self.inactiveTime = int(inactiveTime)
+        return self.active
+
     def update(self):
-        data = requests.get(self.link + self.getLink.format(self.beat, self.username, time.time()))
+        link = self.link + self.getLink.format(self.beat, self.username, self.inactiveTime)
+        data = requests.get(link)
         if data.status_code != 200:
             return False
         diff = len(self.history)
