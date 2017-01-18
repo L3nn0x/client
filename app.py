@@ -30,10 +30,17 @@ class Application:
         self.outText.tag_config("AN", font=self.bold)
         self.hyperlinkManager = HyperlinkManager(self.outText)
         self.update()
+        self.printHelp()
         self.inText.focus()
 
     def run(self):
         self.win.mainloop()
+
+    def printHelp(self):
+        self.outText.configure(state="normal")
+        self.outText.insert(tk.END, "\n\n/help to print this message\n/exit to quit\n/nick [nickname] to choose a nickname\n/color [color] to pick a color\n\n")
+        self.outText.see(tk.END)
+        self.outText.configure(state="disabled")
 
     def send(self, event=''):
         data = self.inText.get()
@@ -42,8 +49,14 @@ class Application:
             return
         elif data == "/exit":
             self.close()
-            return
-        self.chat.send(data)
+        elif data == "/help":
+            self.printHelp()
+        elif data[:6] == "/nick ":
+            self.chat.username = data[6:69]
+        elif data[:7] == "/color ":
+            self.chat.color = data[7:].rstrip().lstrip().lstrip("#")[:6]
+        else:
+            self.chat.send(data)
 
     def update(self):
         self.chat.update()
