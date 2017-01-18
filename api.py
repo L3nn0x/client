@@ -13,7 +13,7 @@ class Message:
         else:
             self.color = "000000"
         self.content = data["content"]
-        self.announcement = False if data["announcement"] == 0 else True
+        self.announcement = int(data["announcement"]) != 0
     
     def getDate(self):
         return datetime.datetime.fromtimestamp(self.timestamp).strftime("%H:%M:%S")
