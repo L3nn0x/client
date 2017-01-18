@@ -62,7 +62,7 @@ class Application:
 
     def update(self):
         if self.win.focus_get() == None:
-            if not self.lastActive:
+            if self.lastActive == 0:
                 self.lastActive = time.time()
             elif time.time() - self.lastActive > 10:
                 self.chat.isActive(False, self.lastActive)
