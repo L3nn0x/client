@@ -24,6 +24,8 @@ class Message:
 class User:
     def __init__(self, username, data):
         self.username = username
+        if len(self.username) == 0:
+            self.username = "Anonymous"
         self.last_active = int(data["last_active"])
 
 class Chat:
@@ -37,7 +39,7 @@ class Chat:
         self.getLink = "?heartbeat={}&username={}&active={}"
         self.diff = 0
         self.history = []
-        self.connected = {}
+        self.connected = []
 
     def isActive(self, active=None, inactiveTime=None):
         if active == None:
@@ -63,8 +65,9 @@ class Chat:
             return False
         diff = len(self.history)
         data = json.loads(data.text)
+        self.connected = []
         for user, d in data["connected"].items():
-            self.connected[user] = User(user, d)
+            self.connected.append(User(user, d))
         for msg in data["messages"]:
             self.history.append(Message(msg))
         self.beat = self.history[-1].id

@@ -51,6 +51,7 @@ class Application:
         self.outText.tag_config("AT", background="blue")
         self.hyperlinkManager = HyperlinkManager(self.outText)
         self.notificationManager = NotificationManager("chat.chocolytech")
+        self.users = []
         self.update()
         self.printHelp()
         self.inText.focus()
@@ -110,14 +111,23 @@ class Application:
         users = self.chat.getUsers()
         self.userList.configure(state="normal")
         self.userList.delete(0, tk.END)
-        for username, user in users.items():
-            data = username
+        actual = []
+        for user in sorted(users, key=lambda e: e.username):
+            actual.append(user.username)
+            data = user.username
             if user.last_active == 0:
                 self.userList.insert(tk.END, data)
             else:
                 data += " (" + hmsString(int(time.time() - user.last_active)) + ")"
                 self.userList.insert(tk.END, data)
                 self.userList.itemconfig(tk.END, fg="gray")
+        for user in self.users:
+            if user not in actual:
+                self.notificationManager.sendNotification(user + " disconnected", "")
+        for user in actual:
+            if user not in self.users:
+                self.notificationManager.sendNotification(user + " connected", "")
+        self.users = actual
 
     def clean(self, msg):
         title = msg.author + " (" + msg.getDate() + ")"
