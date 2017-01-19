@@ -5,6 +5,10 @@ from PIL import Image, ImageTk
 from hyperlink import HyperlinkManager
 import requests
 import time
+import subprocess
+
+def sendNotification(msg):
+    subprocess.call(["notify-send", "chat.chocolytech", msg.__str__()])
 
 class Application:
     def __init__(self, chat):
@@ -30,10 +34,13 @@ class Application:
         self.bold = Font.Font(family="Helvetica", size=14, weight="bold")
         self.bold.configure(weight="bold")
         self.outText.tag_config("AN", font=self.bold)
+        self.outText.tag_config("AT", background="blue")
         self.hyperlinkManager = HyperlinkManager(self.outText)
+        self.notifications = False
         self.update()
         self.printHelp()
         self.inText.focus()
+        self.notifications = True
 
     def run(self):
         self.win.mainloop()
@@ -77,6 +84,8 @@ class Application:
         for msg in self.chat.getDiff():
             self.outText.tag_config(msg.color, foreground="#"+msg.color)
             self.insertMsg(msg)
+            if not self.chat.active and self.notifications:
+                sendNotification(msg)
         self.outText.see(tk.END)
         self.outText.configure(state="disabled")
         self.win.after(1000, self.update)
