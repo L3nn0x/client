@@ -5,20 +5,7 @@ from PIL import Image, ImageTk
 from hyperlink import HyperlinkManager
 import requests
 import time
-import subprocess
-
-def sendNotification(msgs):
-    if len(msgs) > 3:
-        authors = set()
-        for msg in msgs:
-            authors.add(msg.author)
-        author = " " + authors.pop()
-        if len(authors) > 1:
-            author = ""
-        subprocess.run(["notify-send", "-t", "1000", "-a", "chat.chocolytech", "new messages" + author, str(len(msgs)) + " new messages"])
-    else:
-        for msg in msgs:
-            subprocess.run(["notify-send", "-t", "1000", "-a", "chat.chocolytech", "new message from " + msg.author, str(msg)])
+from notifications import NotificationManager
 
 class Application:
     def __init__(self, chat):
@@ -46,11 +33,10 @@ class Application:
         self.outText.tag_config("AN", font=self.bold)
         self.outText.tag_config("AT", background="blue")
         self.hyperlinkManager = HyperlinkManager(self.outText)
-        self.notifications = False
+        self.notificationManager = NotificationManager("chat.chocolytech")
         self.update()
         self.printHelp()
         self.inText.focus()
-        self.notifications = True
 
     def run(self):
         self.win.mainloop()
@@ -79,11 +65,13 @@ class Application:
 
     def update(self):
         if self.win.focus_get() == None:
+            self.notificationManager.notifications(True)
             if self.lastActive == 0:
                 self.lastActive = time.time()
             elif time.time() - self.lastActive > 10:
                 self.chat.isActive(False, self.lastActive)
         else:
+            self.notificationManager.notifications(False)
             self.chat.isActive(True)
             self.lastActive = 0
         self.chat.update()
@@ -94,13 +82,19 @@ class Application:
         for msg in self.chat.getDiff():
             self.outText.tag_config(msg.color, foreground="#"+msg.color)
             self.insertMsg(msg)
-        if not self.win.focus_get() and self.notifications:
-            sendNotification(self.chat.getDiff())
+            if msg.author != self.chat.username:
+                self.notificationManager.sendNotification(*self.clean(msg))
         self.outText.see(tk.END)
         self.outText.configure(state="disabled")
         self.win.after(1000, self.update)
 
+    def clean(self, msg):
+        title = msg.author + " (" + msg.getDate() + ")"
+        body = msg.content
+        return title, body
+
     def close(self):
+        self.notificationManager.stop()
         self.win.destroy()
 
     def click(self, link):
