@@ -15,10 +15,10 @@ def sendNotification(msgs):
         author = " " + authors.pop()
         if len(authors) > 1:
             author = ""
-        subprocess.run(["notify-send", "-a", "chat.chocolytech", "new messages" + author, str(len(msgs)) + " new messages"])
+        subprocess.run(["notify-send", "-t", "1000", "-a", "chat.chocolytech", "new messages" + author, str(len(msgs)) + " new messages"])
     else:
         for msg in msgs:
-            subprocess.run(["notify-send", "-a", "chat.chocolytech", "new message from " + msg.author, str(msg)])
+            subprocess.run(["notify-send", "-t", "1000", "-a", "chat.chocolytech", "new message from " + msg.author, str(msg)])
 
 class Application:
     def __init__(self, chat):
