@@ -61,7 +61,11 @@ class Chat:
 
     def update(self):
         link = self.link + self.getLink.format(self.beat, self.username, self.inactiveTime)
-        data = requests.get(link)
+        try:
+            data = requests.get(link)
+        except:
+            self.online = False
+            return False
         if data.status_code != 200:
             self.online = False
             return False
@@ -83,7 +87,10 @@ class Chat:
     def send(self, msg):
         headers = {"Content-Type" : "application/json", "charset" : "utf-8"}
         data = {'username' : self.username + "#" + self.color, 'content' : msg}
-        r = requests.post(self.link, data = json.dumps(data), headers = headers)
-        return False if r.status_code != 200 else True
+        try:
+            r = requests.post(self.link, data = json.dumps(data), headers = headers)
+            return False if r.status_code != 200 else True
+        except:
+            return False
 
 
