@@ -30,6 +30,7 @@ class User:
 
 class Chat:
     def __init__(self, username, color="000000"):
+        self.online = False
         self.active = False
         self.inactiveTime = 0
         self.username = username
@@ -62,7 +63,9 @@ class Chat:
         link = self.link + self.getLink.format(self.beat, self.username, self.inactiveTime)
         data = requests.get(link)
         if data.status_code != 200:
+            self.online = False
             return False
+        self.online = True
         diff = len(self.history)
         data = json.loads(data.text)
         self.connected = []

@@ -5,6 +5,7 @@ from PIL import Image, ImageTk
 from hyperlink import HyperlinkManager
 import requests
 import time
+import copy
 from notifications import NotificationManager
 from parser import Parser
 
@@ -109,7 +110,13 @@ class Application:
             self.chat.isActive(True)
             self.lastActive = 0
             self.lastLineSeen = 0
-        self.chat.update()
+        tmp = copy.deepcopy(self.chat.online)
+        if not self.chat.update() and tmp == True:
+            self.notificationManager.sendNotification("You have been disconnected", "")
+            self.inText.configure(state="disabled")
+        elif tmp == False:
+            self.notificationManager.sendNotification("You are connected", "")
+            self.inText.configure(state="normal")
         self.updateUsers()
         if self.chat.diff == 0:
             self.win.after(1000, self.update)
