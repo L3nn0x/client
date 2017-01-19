@@ -6,6 +6,7 @@ from hyperlink import HyperlinkManager
 import requests
 import time
 from notifications import NotificationManager
+from parser import Parser
 
 def hmsString(dt):
     h = int(dt / (60 * 60))
@@ -48,9 +49,11 @@ class Application:
         self.bold = Font.Font(family="Helvetica", size=14, weight="bold")
         self.bold.configure(weight="bold")
         self.outText.tag_config("AN", font=self.bold)
-        self.outText.tag_config("AT", background="blue")
+        self.outText.tag_config("AT-ME", background="green")
+        self.outText.tag_config("AT", foreground="blue")
         self.hyperlinkManager = HyperlinkManager(self.outText)
         self.notificationManager = NotificationManager("chat.chocolytech")
+        self.parser = Parser(["@", "http"])
         self.users = []
         self.update()
         self.printHelp()
@@ -148,12 +151,34 @@ class Application:
             tags.append("AN")
         self.outText.insert(tk.END, msg.author, (msg.color, *tags))
         self.outText.insert(tk.END, " ({}): ".format(msg.getDate()), tags)
-        index = msg.content.find("http")
-        if index == -1:
-            self.outText.insert(tk.END, msg.content+"\n", tags)
+
+        r = self.parser.parse(msg.content)
+        if len(r):
+            s = []
+            s.append((msg.content[:r[0].begin], ""))
+            i = 0
+            j = 1
+            while i < len(r):
+                s.append((r[i].formated, r[i].token))
+                if j >= len(r):
+                    break
+                s.append((msg.content[r[i].end+1:r[j].begin], ""))
+                i += 1
+                j += 1
+            s.append((msg.content[r[-1].end+1:], ""))
+            for i in s:
+                if len(s[0]) == 0:
+                    continue
+                if i[1] == "@":
+                    if i[0][1:] == self.chat.username:
+                        self.notificationManager.sendNotification(msg.author + " mentionned you", msg.content, "critical")
+                        self.outText.insert(tk.END, i[0], (*tags, "AT-ME"))
+                    else:
+                        self.outText.insert(tk.END, i[0], (*tags, "AT"))
+                elif i[1] == "http":
+                    self.outText.insert(tk.END, i[0], (*tags, *self.hyperlinkManager.add(lambda e=i[0]: self.click(e))))
+                else:
+                    self.outText.insert(tk.END, i[0], tags)
+            self.outText.insert(tk.END, "\n", tags)
         else:
-            self.outText.insert(tk.END, msg.content[:index], tags)
-            end = msg.content.find(" ", index)
-            end = len(msg.content) if end == -1 else end
-            self.outText.insert(tk.END, msg.content[index:end], (*tags, *self.hyperlinkManager.add(lambda: self.click(msg.content[index:end]))))
-            self.outText.insert(tk.END, " " + msg.content[end:]+"\n", tags)
+            self.outText.insert(tk.END, msg.content+"\n", tags)

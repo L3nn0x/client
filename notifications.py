@@ -28,17 +28,18 @@ class NotificationManager(Thread):
             self.notifs = []
             time.sleep(self.updateTime)
 
-    def sendNotification(self, title, body):
-        self.notifs.append((title, body))
+    def sendNotification(self, title, body, urgency="normal"):
+        self.notifs.append((title, body, urgency))
 
     def _send(self):
-        process = ["notify-send", "-a", self.name, "-u", "normal", "-t", str(self.displayTime*1000)]
+        process = ["notify-send", "-a", self.name, "-t", str(self.displayTime*1000), "-u"]
         if len(self.notifs) > 3:
+            process.append("normal")
             process.append(str(len(self.notifs)) + " new messages")
             subprocess.run(process)
         else:
             for msg in self.notifs:
-                process = ["notify-send", "-a", self.name, "-u", "normal", "-t", str(self.displayTime*1000)]
+                process = ["notify-send", "-a", self.name, "-t", str(self.displayTime*1000), "-u", msg[2]]
                 process.append(msg[0])
                 sub = msg[1][:self.sizeMax]
                 if len(sub) < len(msg[1]):
