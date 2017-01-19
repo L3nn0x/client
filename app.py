@@ -7,8 +7,18 @@ import requests
 import time
 import subprocess
 
-def sendNotification(msg):
-    subprocess.call(["notify-send", "chat.chocolytech", msg.__str__()])
+def sendNotification(msgs):
+    if len(msgs) > 3:
+        authors = set()
+        for msg in msgs:
+            authors.add(msg.author)
+        author = " " + authors.pop()
+        if len(authors) > 1:
+            author = ""
+        subprocess.run(["notify-send", "-a", "chat.chocolytech", "new messages" + author, str(len(msgs)) + " new messages"])
+    else:
+        for msg in msgs:
+            subprocess.run(["notify-send", "-a", "chat.chocolytech", "new message from " + msg.author, str(msg)])
 
 class Application:
     def __init__(self, chat):
@@ -84,8 +94,8 @@ class Application:
         for msg in self.chat.getDiff():
             self.outText.tag_config(msg.color, foreground="#"+msg.color)
             self.insertMsg(msg)
-            if not self.win.focus_get() and self.notifications:
-                sendNotification(msg)
+        if not self.win.focus_get() and self.notifications:
+            sendNotification(self.chat.getDiff())
         self.outText.see(tk.END)
         self.outText.configure(state="disabled")
         self.win.after(1000, self.update)
