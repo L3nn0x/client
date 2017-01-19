@@ -24,7 +24,7 @@ class Message:
 class User:
     def __init__(self, username, data):
         self.username = username
-        self.last_active = data["last_active"]
+        self.last_active = int(data["last_active"])
 
 class Chat:
     def __init__(self, username, color="000000"):
@@ -52,6 +52,9 @@ class Chat:
             else:
                 self.inactiveTime = int(inactiveTime)
         return self.active
+
+    def getUsers(self):
+        return self.connected
 
     def update(self):
         link = self.link + self.getLink.format(self.beat, self.username, self.inactiveTime)

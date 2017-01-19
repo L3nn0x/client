@@ -7,6 +7,18 @@ import requests
 import time
 from notifications import NotificationManager
 
+def hmsString(dt):
+    h = int(dt / (60 * 60))
+    m = int((dt % (60 * 60))/ 60)
+    s = int(dt % 60)
+    if h > 0:
+        return "{}h".format(h)
+    if m > 0:
+        return "{}m".format(m)
+    if s < 10:
+        return "<10s"
+    return "{}s".format((s // 10) * 10)
+
 class Application:
     def __init__(self, chat):
         self.lastActive = 0
@@ -23,11 +35,16 @@ class Application:
         self.scrollbar.grid(row=0, column=1,sticky=tk.E+tk.N+tk.S)
         self.scrollbar.config(command=self.outText.yview)
         self.outText.config(yscrollcommand=self.scrollbar.set)
-        self.inText = tk.Entry(self.win)
-        self.inText.grid(row=1, sticky=tk.S+tk.W+tk.E)
+        self.userList = tk.Listbox(self.win)
+        self.userList.configure(state="disabled")
+        self.userList.grid(row=0, column=2, sticky=tk.W+tk.N+tk.S)
+        self.inFrame = tk.Frame(self.win, relief=tk.SUNKEN)
+        self.inFrame.grid(row=1, columnspan=3,sticky=tk.N+tk.W+tk.S+tk.E)
+        self.inText = tk.Entry(self.inFrame)
+        self.inText.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         self.inText.bind('<Return>', self.send)
-        self.sendButton = tk.Button(command=self.send,text="Send")
-        self.sendButton.grid(row=1, sticky=tk.E)
+        self.sendButton = tk.Button(self.inFrame, command=self.send,text="Send")
+        self.sendButton.pack(side=tk.RIGHT)
         self.bold = Font.Font(family="Helvetica", size=14, weight="bold")
         self.bold.configure(weight="bold")
         self.outText.tag_config("AN", font=self.bold)
@@ -75,6 +92,7 @@ class Application:
             self.chat.isActive(True)
             self.lastActive = 0
         self.chat.update()
+        self.updateUsers()
         if self.chat.diff == 0:
             self.win.after(1000, self.update)
             return
@@ -87,6 +105,19 @@ class Application:
         self.outText.see(tk.END)
         self.outText.configure(state="disabled")
         self.win.after(1000, self.update)
+
+    def updateUsers(self):
+        users = self.chat.getUsers()
+        self.userList.configure(state="normal")
+        self.userList.delete(0, tk.END)
+        for username, user in users.items():
+            data = username
+            if user.last_active == 0:
+                self.userList.insert(tk.END, data)
+            else:
+                data += " (" + hmsString(int(time.time() - user.last_active)) + ")"
+                self.userList.insert(tk.END, data)
+                self.userList.itemconfig(tk.END, fg="gray")
 
     def clean(self, msg):
         title = msg.author + " (" + msg.getDate() + ")"
