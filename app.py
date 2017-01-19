@@ -60,6 +60,14 @@ class Application:
         self.update()
         self.printHelp()
         self.inText.focus()
+        self.outText.bind("<Control-c>", self.copy)
+
+    def copy(self, event=None):
+        sel = self.outText.get("sel.first", "sel.last")
+        if len(sel) < 1:
+            return
+        self.win.clipboard_clear()
+        self.win.clipboard_append(sel)
 
     def run(self):
         self.win.mainloop()
