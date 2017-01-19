@@ -23,8 +23,9 @@ class NotificationManager(Thread):
 
     def run(self):
         while self.isRunning:
-            if self.active:
-                self._send()
+            if not self.active:
+                self.notifs = [i for i in self.notifs if i[2] == "urgency"]
+            self._send()
             self.notifs = []
             time.sleep(self.updateTime)
 

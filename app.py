@@ -58,6 +58,7 @@ class Application:
         self.notificationManager = NotificationManager("chat.chocolytech")
         self.parser = Parser(["@", "http"])
         self.users = []
+        self.notifs = True
         self.update()
         self.printHelp()
         self.inText.focus()
@@ -75,7 +76,7 @@ class Application:
 
     def printHelp(self):
         self.outText.configure(state="normal")
-        self.outText.insert(tk.END, "\n\n/help to print this message\n/exit to quit\n/nick [nickname] to choose a nickname\n/color [color] to pick a color\n\n")
+        self.outText.insert(tk.END, "\n\n/help to print this message\n/exit to quit\n/nick [nickname] to choose a nickname\n/color [color] to pick a color\n/notif toggle the notifications\n\n")
         self.outText.see(tk.END)
         self.outText.configure(state="disabled")
 
@@ -92,6 +93,8 @@ class Application:
             self.chat.username = data[6:69]
         elif data[:7] == "/color ":
             self.chat.color = data[7:].rstrip().lstrip().lstrip("#")[:6]
+        elif data == "/notif":
+            self.notifs = False
         else:
             self.chat.send(data)
 
@@ -100,7 +103,8 @@ class Application:
             self.outText.tag_remove("TO-SEE", 1.0, tk.END)
         if self.win.focus_get() == None:
             self.lastLineSeen = self.outText.index(tk.END)
-            self.notificationManager.notifications(True)
+            if self.notifs:
+                self.notificationManager.notifications(True)
             if self.lastActive == 0:
                 self.lastActive = time.time()
             elif time.time() - self.lastActive > 10:
