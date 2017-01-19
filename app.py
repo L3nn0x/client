@@ -84,7 +84,7 @@ class Application:
         for msg in self.chat.getDiff():
             self.outText.tag_config(msg.color, foreground="#"+msg.color)
             self.insertMsg(msg)
-            if not self.chat.active and self.notifications:
+            if not self.win.focus_get() and self.notifications:
                 sendNotification(msg)
         self.outText.see(tk.END)
         self.outText.configure(state="disabled")
