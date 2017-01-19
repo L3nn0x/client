@@ -103,8 +103,8 @@ class Application:
         self.outText.configure(state="normal")
         for msg in self.chat.getDiff():
             self.outText.tag_config(msg.color, foreground="#"+msg.color)
-            self.insertMsg(msg)
-            if msg.author != self.chat.username:
+            notif = self.insertMsg(msg)
+            if notif and msg.author != self.chat.username:
                 self.notificationManager.sendNotification(*self.clean(msg))
         self.outText.see(tk.END)
         self.outText.configure(state="disabled")
@@ -153,6 +153,7 @@ class Application:
         self.outText.insert(tk.END, " ({}): ".format(msg.getDate()), tags)
 
         r = self.parser.parse(msg.content)
+        ret = True
         if len(r):
             s = []
             s.append((msg.content[:r[0].begin], ""))
@@ -173,6 +174,7 @@ class Application:
                     if i[0][1:] == self.chat.username:
                         self.notificationManager.sendNotification(msg.author + " mentionned you", msg.content, "critical")
                         self.outText.insert(tk.END, i[0], (*tags, "AT-ME"))
+                        ret = False
                     else:
                         self.outText.insert(tk.END, i[0], (*tags, "AT"))
                 elif i[1] == "http":
@@ -182,3 +184,4 @@ class Application:
             self.outText.insert(tk.END, "\n", tags)
         else:
             self.outText.insert(tk.END, msg.content+"\n", tags)
+        return ret
