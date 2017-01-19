@@ -51,6 +51,8 @@ class Application:
         self.outText.tag_config("AN", font=self.bold)
         self.outText.tag_config("AT-ME", background="green")
         self.outText.tag_config("AT", foreground="blue")
+        self.outText.tag_config("TO-SEE", background="#e8d047")
+        self.lastLineSeen = 0
         self.hyperlinkManager = HyperlinkManager(self.outText)
         self.notificationManager = NotificationManager("chat.chocolytech")
         self.parser = Parser(["@", "http"])
@@ -85,7 +87,10 @@ class Application:
             self.chat.send(data)
 
     def update(self):
+        if self.lastLineSeen == 0:
+            self.outText.tag_remove("TO-SEE", 1.0, tk.END)
         if self.win.focus_get() == None:
+            self.lastLineSeen = self.outText.index(tk.END)
             self.notificationManager.notifications(True)
             if self.lastActive == 0:
                 self.lastActive = time.time()
@@ -95,6 +100,7 @@ class Application:
             self.notificationManager.notifications(False)
             self.chat.isActive(True)
             self.lastActive = 0
+            self.lastLineSeen = 0
         self.chat.update()
         self.updateUsers()
         if self.chat.diff == 0:
@@ -105,7 +111,7 @@ class Application:
             self.outText.tag_config(msg.color, foreground="#"+msg.color)
             notif = self.insertMsg(msg)
             if notif and msg.author != self.chat.username:
-                self.notificationManager.sendNotification(*self.clean(msg))
+                self.notificationManager.sendNotification(*self.clean(msg), "normal" if not msg.announcement else "critical")
         self.outText.see(tk.END)
         self.outText.configure(state="disabled")
         self.win.after(1000, self.update)
@@ -149,6 +155,8 @@ class Application:
         tags = []
         if msg.announcement:
             tags.append("AN")
+        if self.win.focus_get() is None:
+            tags.append("TO-SEE")
         self.outText.insert(tk.END, msg.author, (msg.color, *tags))
         self.outText.insert(tk.END, " ({}): ".format(msg.getDate()), tags)
 
