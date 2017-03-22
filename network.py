@@ -2,7 +2,7 @@ import requests
 
 class Network:
     def getData(self, url, **params):
-        r = requests.get(url, data=params)
+        r = requests.get(url, params=params)
         if r.status_code != 200:
             return False, r.status_code
         return True, r.text
