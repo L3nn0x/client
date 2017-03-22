@@ -46,7 +46,7 @@ class MainEdit(Edit):
             self.parent.mainList.keypress(size, key)
         elif key in ("ctrl d", "ctrl c"):
             raise ExitMainLoop()
-        elif key == "enter":
+        elif key == "enter" and len(self.get_edit_text()) != 0:
             self.parent.parent.sendMessage(self.get_edit_text())
             self.set_edit_text("")
 
