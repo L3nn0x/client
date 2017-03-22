@@ -4,12 +4,9 @@ import ui
 import urwid
 
 class App:
-    def __init__(self, configFile="config.cf"):
-        self.config = Config(configFile)
+    def __init__(self, configFile):
         self.active = True
         self.config = Config(configFile)
-        self.config.setConfig("url", "https://chat.chocolytech.info")
-        self.config.setConfig("username", "L3nn0x")
         self.chat = Chatbix(self.config.getConfig("url"), self.config.getConfig("username"))
         self.ui = ui.Ui(self)
 
