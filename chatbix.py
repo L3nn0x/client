@@ -1,5 +1,4 @@
 import time
-import asyncio
 import datetime
 from api import ChatbixApi
 
@@ -46,8 +45,21 @@ class Timestamp:
     def getDate(self, s="%H:%M:%S"):
         return datetime.datetime.fromtimestamp(self.timestamp).strftime(s)
 
+    def hmsString(self):
+        dt = int(time.time() - self.timestamp)
+        h = int(dt / (60 * 60))
+        m = int((dt % (60 * 60)) / 60)
+        s = int (dt % 60)
+        if h > 0:
+            return "{}h".format(h)
+        if m > 0:
+            return "{}m".format(m)
+        if s < 10:
+            return "<10s"
+        return "{}s".format((s // 10) * 10)
+
     def __str__(self):
-        return str(self.timestamp)
+        return self.getDate()
 
 class Color:
     def __init__(self, color):
@@ -91,11 +103,8 @@ class Message:
         return "{} ({}): {}".format(self.author, str(self.timestamp), self.content)
 
 class Chatbix:
-    def __init__(self, url, username="Anonymous", loop=None):
-        if not loop:
-            loop = asyncio.get_event_loop()
-        self.loop = loop
-        self.api = ChatbixApi(url, loop)
+    def __init__(self, url, username="Anonymous", color = "#000000"):
+        self.api = ChatbixApi(url)
         self.channels = {
                 "default" : Channel("default")
                 }
@@ -103,9 +112,9 @@ class Chatbix:
         self.username = username
         self.authKey = None
         self.lastId = None
-        self.color = Color("#000000")
+        self.color = Color(color)
 
-    def getChannel(self, channel):
+    def getChannel(self, channel=None):
         if not channel:
             return self.channels["default"]
         try:
@@ -115,46 +124,34 @@ class Chatbix:
             return self.channels[channel]
 
     def login(self, password):
-        return self.loop.run_until_complete(self.login_async(password))
-
-    async def login_async(self, password):
         if self.authKey:
             return True
-        res = await self.api.login_async(self.username, password)
+        res = self.api.login(self.username, password)
         if len(res) == 0:
             return False
         self.authKey = res
         return True
 
     def logout(self):
-        return self.loop.run_until_complete(self.logout_async())
-
-    async def logout_async(self):
         if not self.authKey:
             return True
-        await self.api.logout_async(self.username, self.authKey)
+        self.api.logout(self.username, self.authKey)
         self.authKey = None
         return True
 
     def register(self, password):
-        return self.loop.run_until_complete(self.register_async(password))
-
-    async def register_async(self, password):
         if self.authKey:
             return True
-        res = await self.api.register_async(self.username, password)
+        res = self.api.register(self.username, password)
         if len(res) == 0:
             return False
         self.authKey = res
         return True
 
     def update(self, active):
-        return self.loop.run_until_complete(self.update_async(active))
-
-    async def update_async(self, active):
         channels = [i for i in self.channels.keys() if i != "default"]
         default = True if "default" in self.channels.keys() else False
-        data = await self.api.heartbeat_async(self.username, active=active, authKey=self.authKey, messageId=self.lastId, defaultChannel=default, *channels)
+        data = self.api.heartbeat(self.username, active=active, authKey=self.authKey, messageId=self.lastId, defaultChannel=default, *channels)
         if len(data) == 0:
             return False
         self.parse(data)
@@ -176,9 +173,6 @@ class Chatbix:
             self.users[u.username] = u
 
     def sendMessage(self, content, tag=Tag(), channel=None):
-        return self.loop.run_until_complete(self.sendMessage_async(content, tag))
-
-    async def sendMessage_async(self, content, tag=Tag(), channel=None):
-        return await self.api.sendMessage_async(self.username, content, color=self.color, tags=tag, channel=channel, authKey=self.authKey)
+        return self.api.sendMessage(self.username, content, color=self.color, tags=tag, channel=channel, authKey=self.authKey)
 
 
